@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { createPayment, getUserInvoices } from '@/lib/firestore-financial';
+import { createPayment, getUserInvoices, getUserAccounts, createTransaction } from '@/lib/firestore-financial';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,19 +11,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Loader2, DollarSign, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import type { Invoice, PaymentMethod, PaymentStatus } from '@/types/financial';
+import type { Invoice, PaymentMethod, PaymentStatus, Account } from '@/types/financial';
 
 export default function NewPaymentPage() {
   const router = useRouter();
   const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [error, setError] = useState('');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const [formData, setFormData] = useState({
     invoiceId: '',
+    accountId: '',
     method: 'bank transfer' as PaymentMethod,
     transactionRef: '',
     amount: 0,
@@ -35,6 +38,7 @@ export default function NewPaymentPage() {
   useEffect(() => {
     if (user) {
       loadInvoices();
+      loadAccounts();
     }
   }, [user]);
 
@@ -64,6 +68,21 @@ export default function NewPaymentPage() {
       console.error('Error loading invoices:', error);
     } finally {
       setLoadingInvoices(false);
+    }
+  };
+
+  const loadAccounts = async () => {
+    if (!user) return;
+    setLoadingAccounts(true);
+    try {
+      const data = await getUserAccounts(user.uid);
+      // Only show active asset accounts (bank, cash, etc.)
+      const assetAccounts = data.filter(a => a.isActive && a.type === 'asset');
+      setAccounts(assetAccounts);
+    } catch (error) {
+      console.error('Error loading accounts:', error);
+    } finally {
+      setLoadingAccounts(false);
     }
   };
 
@@ -107,6 +126,36 @@ export default function NewPaymentPage() {
       };
 
       await createPayment(user.uid, paymentData);
+
+      // If account is linked, create accounting transaction
+      if (formData.accountId) {
+        const account = accounts.find(a => a.id === formData.accountId);
+        if (account) {
+          // Find or assume Accounts Receivable account
+          // In a real system, you'd have a dedicated AR account
+          // For now, we'll create a simple transaction to increase the cash account
+          const transactionData = {
+            transactionId: `TXN-${Date.now()}`,
+            date: new Date(formData.date).toISOString(),
+            description: `Payment received for ${selectedInvoice.invoiceNumber}`,
+            reference: paymentData.paymentId,
+            entries: [
+              {
+                accountId: formData.accountId,
+                debit: formData.amount, // Increase cash/bank account
+                credit: 0,
+                description: `Payment from ${selectedInvoice.clientId}`,
+              },
+              // Note: In a full system, you'd credit an Accounts Receivable account here
+              // For now, this creates the debit entry to track cash inflow
+            ],
+            notes: `Payment for invoice ${selectedInvoice.invoiceNumber}`,
+          };
+
+          await createTransaction(user.uid, transactionData);
+        }
+      }
+
       router.push('/dashboard/payments');
     } catch (err: any) {
       setError(err.message || 'Failed to record payment');
@@ -229,6 +278,29 @@ export default function NewPaymentPage() {
                   </div>
                 </div>
 
+                {/* Deposit Account */}
+                <div className="space-y-2">
+                  <Label htmlFor="account">Deposit to Account *</Label>
+                  <Select
+                    value={formData.accountId}
+                    onValueChange={(value) => setFormData({ ...formData, accountId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingAccounts ? "Loading..." : "Select account to receive payment"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id!}>
+                          {account.name} - {formatCurrency(account.balance)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Where is this payment being deposited? (Bank account, cash, etc.)
+                  </p>
+                </div>
+
                 {/* Payment Method & Status */}
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
@@ -307,7 +379,7 @@ export default function NewPaymentPage() {
                   Cancel
                 </Button>
               </Link>
-              <Button type="submit" disabled={loading || !formData.invoiceId}>
+              <Button type="submit" disabled={loading || !formData.invoiceId || !formData.accountId}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Record Payment
               </Button>
@@ -343,17 +415,28 @@ export default function NewPaymentPage() {
                     </p>
                   </div>
                   {formData.amount > 0 && (
-                    <div className="rounded-lg bg-muted p-3">
-                      <p className="text-sm text-muted-foreground">After This Payment</p>
-                      <p className="text-lg font-semibold">
-                        {formatCurrency(selectedInvoice.balanceDue - formData.amount)}
-                      </p>
-                      {selectedInvoice.balanceDue - formData.amount === 0 && (
-                        <p className="mt-2 text-xs text-green-600 dark:text-green-400">
-                          ✓ Invoice will be marked as paid
+                    <>
+                      <div className="rounded-lg bg-muted p-3">
+                        <p className="text-sm text-muted-foreground">After This Payment</p>
+                        <p className="text-lg font-semibold">
+                          {formatCurrency(selectedInvoice.balanceDue - formData.amount)}
                         </p>
+                        {selectedInvoice.balanceDue - formData.amount === 0 && (
+                          <p className="mt-2 text-xs text-green-600 dark:text-green-400">
+                            ✓ Invoice will be marked as paid
+                          </p>
+                        )}
+                      </div>
+                      {formData.accountId && (
+                        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                          <p className="text-sm font-medium text-primary">💰 Account Update</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {accounts.find(a => a.id === formData.accountId)?.name} will increase by{' '}
+                            {formatCurrency(formData.amount)}
+                          </p>
+                        </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               </div>

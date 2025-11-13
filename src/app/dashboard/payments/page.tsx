@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserPayments, deletePayment } from '@/lib/firestore-financial';
+import { getUserPayments, deletePayment, getInvoice, getClient } from '@/lib/firestore-financial';
+import { downloadReceiptPDF } from '@/lib/pdf-utils';
+import { ReceiptPDF } from '@/components/pdf/ReceiptPDF';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Trash2, DollarSign, CreditCard, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, Trash2, DollarSign, CreditCard, CheckCircle2, Download } from 'lucide-react';
 import type { Payment } from '@/types/financial';
 import Link from 'next/link';
 
@@ -14,6 +16,7 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -41,6 +44,47 @@ export default function PaymentsPage() {
       setPayments(payments.filter(p => p.id !== paymentId));
     } catch (error) {
       console.error('Error deleting payment:', error);
+    }
+  };
+
+  const handleDownloadReceipt = async (payment: Payment) => {
+    if (!user || !userProfile) return;
+    
+    try {
+      setDownloadingId(payment.id || null);
+      
+      // Get invoice details
+      const invoice = await getInvoice(payment.invoiceId);
+      if (!invoice) {
+        alert('Invoice not found');
+        return;
+      }
+
+      // Get client details
+      let clientName = 'Client';
+      let clientEmail = '';
+      try {
+        const client = await getClient(invoice.clientId);
+        if (client) {
+          clientName = client.name;
+          clientEmail = client.email;
+        }
+      } catch (error) {
+        console.error('Error fetching client:', error);
+      }
+
+      await downloadReceiptPDF(ReceiptPDF, {
+        payment,
+        invoice,
+        businessProfile: userProfile.businessProfile,
+        clientName,
+        clientEmail,
+      });
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      alert('Failed to generate receipt. Please try again.');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -200,13 +244,29 @@ export default function PaymentsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => payment.id && handleDelete(payment.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownloadReceipt(payment)}
+                          disabled={downloadingId === payment.id}
+                          title="Download Receipt"
+                        >
+                          {downloadingId === payment.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => payment.id && handleDelete(payment.id)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

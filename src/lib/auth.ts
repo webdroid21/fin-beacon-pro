@@ -9,6 +9,7 @@ import {
   type User as FirebaseUser,
   type UserCredential,
 } from 'firebase/auth';
+import { createDefaultAccounts } from './default-accounts';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import type { User } from '@/types';
@@ -148,6 +149,7 @@ export const createOrUpdateUserProfile = async (
     };
 
     await setDoc(userRef, newUser);
+    await createDefaultAccounts(firebaseUser.uid); // ← Add this line
   } else {
     // Update last login
     await setDoc(

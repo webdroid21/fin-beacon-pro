@@ -358,6 +358,20 @@ export const deleteBudget = async (budgetId: string): Promise<void> => {
 // ============================================================================
 
 export const createAccount = async (userId: string, accountData: Omit<Account, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  // Check if account name already exists for this user
+  const accountsRef = collection(db, 'accounts');
+  const nameQuery = query(
+    accountsRef,
+    where('userId', '==', userId),
+    where('name', '==', accountData.name)
+  );
+  
+  const existingAccounts = await getDocs(nameQuery);
+  
+  if (!existingAccounts.empty) {
+    throw new Error(`An account with the name "${accountData.name}" already exists. Please use a different name.`);
+  }
+  
   const docRef = await addDoc(collection(db, 'accounts'), {
     ...accountData,
     userId,
@@ -390,6 +404,33 @@ export const getUserAccounts = async (userId: string): Promise<Account[]> => {
 };
 
 export const updateAccount = async (accountId: string, data: Partial<Account>): Promise<void> => {
+  // If updating name, check for uniqueness
+  if (data.name) {
+    const accountRef = doc(db, 'accounts', accountId);
+    const accountSnap = await getDoc(accountRef);
+    
+    if (accountSnap.exists()) {
+      const accountData = accountSnap.data() as Account;
+      
+      // Check if another account with this name exists for the same user
+      const accountsRef = collection(db, 'accounts');
+      const nameQuery = query(
+        accountsRef,
+        where('userId', '==', accountData.userId),
+        where('name', '==', data.name)
+      );
+      
+      const existingAccounts = await getDocs(nameQuery);
+      
+      // Make sure it's not the same account being updated
+      const duplicates = existingAccounts.docs.filter(doc => doc.id !== accountId);
+      
+      if (duplicates.length > 0) {
+        throw new Error(`An account with the name "${data.name}" already exists. Please use a different name.`);
+      }
+    }
+  }
+  
   const docRef = doc(db, 'accounts', accountId);
   await updateDoc(docRef, {
     ...data,

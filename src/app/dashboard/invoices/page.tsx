@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { getUserInvoices, deleteInvoice } from '@/lib/firestore-financial';
+import { getUserInvoices, deleteInvoice, getClient } from '@/lib/firestore-financial';
+import { batchUpdateOverdueInvoices, getDueStatusText } from '@/lib/invoice-utils';
+import { sendInvoiceEmail } from '@/lib/email-service';
+import { downloadInvoicePDF } from '@/lib/pdf-utils';
+import { InvoicePDF } from '@/components/pdf/InvoicePDF';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Eye, Edit, Trash2, FileText, Download, AlertCircle } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, FileText, Download, Mail, AlertCircle } from 'lucide-react';
 import type { Invoice } from '@/types/financial';
+import type { Client } from '@/types/financial';
 import Link from 'next/link';
 
 export default function InvoicesPage() {
@@ -15,6 +20,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -27,7 +33,17 @@ export default function InvoicesPage() {
     setLoading(true);
     try {
       const data = await getUserInvoices(user.uid);
-      setInvoices(data);
+      
+      // Auto-update overdue invoices
+      const updatedIds = await batchUpdateOverdueInvoices(data);
+      
+      // Reload if any were updated
+      if (updatedIds.length > 0) {
+        const refreshedData = await getUserInvoices(user.uid);
+        setInvoices(refreshedData);
+      } else {
+        setInvoices(data);
+      }
     } catch (error) {
       console.error('Error loading invoices:', error);
     } finally {
@@ -42,6 +58,84 @@ export default function InvoicesPage() {
       setInvoices(invoices.filter(inv => inv.id !== invoiceId));
     } catch (error) {
       console.error('Error deleting invoice:', error);
+    }
+  };
+
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    if (!user || !userProfile) return;
+    
+    try {
+      setDownloadingId(invoice.id || null);
+      
+      // Get client details
+      let clientName = 'Client';
+      let clientEmail = '';
+      let clientCompany = '';
+      let clientAddress = '';
+      
+      try {
+        const client = await getClient(invoice.clientId);
+        if (client) {
+          clientName = client.name;
+          clientEmail = client.email;
+          clientCompany = client.companyName || '';
+          clientAddress = [
+            client.address?.street,
+            client.address?.city,
+            client.address?.country,
+            client.address?.postalCode
+          ].filter(Boolean).join(', ');
+        }
+      } catch (error) {
+        console.error('Error fetching client:', error);
+      }
+
+      await downloadInvoicePDF(InvoicePDF, {
+        invoice,
+        businessProfile: userProfile.businessProfile,
+        clientName,
+        clientEmail,
+        clientCompany,
+        clientAddress,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleEmailInvoice = async (invoice: Invoice) => {
+    if (!user || !userProfile) return;
+
+    try {
+      // Get client details
+      let clientEmail = '';
+      try {
+        const client = await getClient(invoice.clientId);
+        if (client) {
+          clientEmail = client.email;
+        }
+      } catch (error) {
+        console.error('Error fetching client:', error);
+      }
+
+      if (!clientEmail) {
+        alert('Client email not found. Please update client information.');
+        return;
+      }
+
+      sendInvoiceEmail({
+        to: clientEmail,
+        invoiceNumber: invoice.invoiceNumber,
+        dueDate: invoice.dueDate,
+        total: invoice.total,
+        currency: invoice.currency,
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to open email client. Please try again.');
     }
   };
 
@@ -219,25 +313,49 @@ export default function InvoicesPage() {
                     <td className="px-6 py-4 text-right text-sm">
                       {formatCurrency(invoice.balanceDue, invoice.currency)}
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                        {invoice.status}
-                      </span>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                          {invoice.status}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {getDueStatusText(invoice)}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Link href={`/dashboard/invoices/${invoice.id}`}>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" title="View">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="sm">
-                          <Download className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDownloadPDF(invoice)}
+                          disabled={downloadingId === invoice.id}
+                          title="Download PDF"
+                        >
+                          {downloadingId === invoice.id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEmailInvoice(invoice)}
+                          title="Email Invoice"
+                        >
+                          <Mail className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => invoice.id && handleDelete(invoice.id)}
+                          title="Delete"
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>

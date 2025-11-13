@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   LayoutDashboard,
   FileText,
@@ -14,6 +15,7 @@ import {
   DollarSign,
   HelpCircle,
   MessageSquare,
+  Wallet,
 } from "lucide-react";
 
 import { NavMain } from "@/components/dashboard/nav-main";
@@ -91,6 +93,25 @@ const navMain = [
     ],
   },
   {
+    title: "Accounts",
+    url: "/dashboard/accounts",
+    icon: Wallet,
+    items: [
+      {
+        title: "All Accounts",
+        url: "/dashboard/accounts",
+      },
+      {
+        title: "Add Account",
+        url: "/dashboard/accounts/new",
+      },
+      {
+        title: "Transfer Funds",
+        url: "/dashboard/accounts/transfer",
+      },
+    ],
+  },
+  {
     title: "Expenses",
     url: "/dashboard/expenses",
     icon: Receipt,
@@ -100,7 +121,7 @@ const navMain = [
         url: "/dashboard/expenses",
       },
       {
-        title: "Add Expense",
+        title: "Add Entry",
         url: "/dashboard/expenses/new",
       },
     ],
@@ -109,11 +130,16 @@ const navMain = [
     title: "Budgets",
     url: "/dashboard/budgets",
     icon: TrendingUp,
-  },
-  {
-    title: "Analytics",
-    url: "/dashboard/analytics",
-    icon: BarChart3,
+    items: [
+      {
+        title: "All Budgets",
+        url: "/dashboard/budgets",
+      },
+      {
+        title: "Create Budget",
+        url: "/dashboard/budgets/new",
+      },
+    ],
   },
   {
     title: "Reports",
@@ -150,9 +176,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <DollarSign className="size-4" />
-                </div>
+                <Image
+                  src="/logo.svg"
+                  alt="Logo"
+                  width={32}
+                  height={32}
+                  className="size-8"
+                />
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
                     {userProfile?.businessProfile?.name || "Fin Beacon Pro"}

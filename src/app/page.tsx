@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -22,9 +23,13 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <DollarSign className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="Fin Beacon Pro Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10"
+            />
             <span className="text-xl font-bold">Fin Beacon Pro</span>
           </div>
           
@@ -295,9 +300,13 @@ export default function Home() {
           <div className="grid gap-8 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <DollarSign className="h-5 w-5 text-primary-foreground" />
-                </div>
+                <Image
+                  src="/logo.svg"
+                  alt="Fin Beacon Pro Logo"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
                 <span className="font-bold">Fin Beacon Pro</span>
               </div>
               <p className="mt-4 text-sm text-muted-foreground">
