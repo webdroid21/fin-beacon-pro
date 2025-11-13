@@ -226,3 +226,28 @@ export const subscribeToCollection = <T>(
     }
   );
 };
+
+/**
+ * Helper functions for specific collections
+ */
+
+// Update user profile
+export const updateUserProfile = async (
+  userId: string,
+  data: Partial<DocumentData>
+): Promise<void> => {
+  return updateDocument('users', userId, data);
+};
+
+// Get user profile
+export const getUserProfile = async (userId: string) => {
+  return getDocument('users', userId);
+};
+
+// Subscribe to user profile changes
+export const subscribeToUserProfile = (
+  userId: string,
+  callback: (data: any) => void
+): Unsubscribe => {
+  return subscribeToDocument('users', userId, callback);
+};

@@ -9,6 +9,7 @@ import {
   LogOut,
   Settings,
   User,
+  Shield,
 } from "lucide-react";
 
 import {
@@ -102,24 +103,28 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=account")}>
                 <User />
-                Profile
+                Account Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=business")}>
+                <BadgeCheck />
+                Business Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=security")}>
+                <Shield />
+                Security
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=preferences")}>
                 <Settings />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
+                Preferences
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+                <Bell />
+                Notifications
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
