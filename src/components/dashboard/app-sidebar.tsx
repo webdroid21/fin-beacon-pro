@@ -159,11 +159,6 @@ const navSecondary = [
     url: "#",
     icon: HelpCircle,
   },
-  {
-    title: "Feedback",
-    url: "#",
-    icon: MessageSquare,
-  },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
