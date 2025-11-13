@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB
+    }
+    
+    function isValidPDFFile() {
+      return request.resource.contentType == 'application/pdf' &&
+             request.resource.size < 10 * 1024 * 1024; // 10MB
+    }
+    
+    function isValidReceiptFile() {
+      return (request.resource.contentType.matches('image/.*') ||
+              request.resource.contentType == 'application/pdf') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB
+    }
+    
+    // User profile images and business logos
+    match /users/{userId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && 
+                      (isValidImageFile() || isValidPDFFile());
+    }
+    
+    // Invoice attachments and PDFs
+    match /users/{userId}/invoices/{invoiceId}/{allPaths=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && 
+                      (isValidImageFile() || isValidPDFFile());
+    }
+    
+    // Expense receipts
+    match /users/{userId}/expenses/{expenseId}/{allPaths=**} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) && isValidReceiptFile();
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

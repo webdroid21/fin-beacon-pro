@@ -1,0 +1,12 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": [
+    {
+      "bucket": "fin-beacon-pro.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ]
+}
