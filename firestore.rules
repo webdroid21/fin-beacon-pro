@@ -71,6 +71,24 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid;
     }
     
+    // Accounts collection (Accounting Module)
+    match /accounts/{accountId} {
+      // Users can only access their own accounts
+      allow read, write: if isAuthenticated() && 
+                            resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Transactions collection (Accounting Module)
+    match /transactions/{transactionId} {
+      // Users can only access their own transactions
+      allow read, write: if isAuthenticated() && 
+                            resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+    }
+    
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
