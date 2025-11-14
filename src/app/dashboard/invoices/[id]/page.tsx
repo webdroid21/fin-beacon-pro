@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { getInvoice, getClient, updateInvoice, deleteInvoice } from '@/lib/firestore-financial';
+import { getInvoice, getClient, updateInvoice, deleteInvoice, getUserPayments } from '@/lib/firestore-financial';
 import { getInvoicePayments } from '@/lib/firestore-financial';
 import { downloadInvoicePDF } from '@/lib/pdf-utils';
 import { EnhancedInvoicePDF } from '@/components/pdf/EnhancedInvoicePDF';
@@ -72,8 +72,30 @@ export default function InvoiceDetailPage() {
       const clientData = await getClient(invoiceData.clientId);
       setClient(clientData);
 
-      // Load payments
-      const paymentsData = await getInvoicePayments(invoiceData.invoiceId);
+      // Load payments - try multiple strategies with userId for security rules
+      let paymentsData = await getInvoicePayments(invoiceData.invoiceId, user?.uid);
+      console.log('Payments by invoiceId:', paymentsData.length);
+      
+      // If no payments found with custom invoiceId, try with document ID
+      if (paymentsData.length === 0 && params.id && user) {
+        paymentsData = await getInvoicePayments(params.id as string, user.uid);
+        console.log('Payments by document ID:', paymentsData.length);
+      }
+      
+      // If still no payments, try loading all user payments and filter by clientId
+      if (paymentsData.length === 0 && user) {
+        const allPayments = await getUserPayments(user.uid);
+        console.log('All user payments:', allPayments.length);
+        // Filter by clientId or invoiceId/document ID
+        paymentsData = allPayments.filter(p => 
+          p.invoiceId === invoiceData.invoiceId || 
+          p.invoiceId === params.id ||
+          p.clientId === invoiceData.clientId
+        );
+        console.log('Filtered payments by client/invoice:', paymentsData.length);
+      }
+      
+      console.log('Final loaded payments:', paymentsData.length, 'for invoice:', invoiceData.invoiceNumber);
       setPayments(paymentsData);
     } catch (error) {
       console.error('Error loading invoice:', error);
@@ -161,12 +183,6 @@ export default function InvoiceDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/invoices">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </Link>
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">{invoice.invoiceNumber}</h1>

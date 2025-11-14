@@ -54,14 +54,6 @@ const navMain = [
         title: "Create New",
         url: "/dashboard/invoices/new",
       },
-      {
-        title: "Drafts",
-        url: "/dashboard/invoices?status=draft",
-      },
-      {
-        title: "Pending",
-        url: "/dashboard/invoices?status=pending",
-      },
     ],
   },
   {
@@ -114,7 +106,7 @@ const navMain = [
     ],
   },
   {
-    title: "Expenses",
+    title: "Expenses & Income",
     url: "/dashboard/expenses",
     icon: Receipt,
     items: [

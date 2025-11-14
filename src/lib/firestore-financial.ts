@@ -202,12 +202,21 @@ export const getUserPayments = async (userId: string): Promise<Payment[]> => {
   })) as Payment[];
 };
 
-export const getInvoicePayments = async (invoiceId: string): Promise<Payment[]> => {
-  const q = query(
-    collection(db, 'payments'),
-    where('invoiceId', '==', invoiceId),
-    orderBy('date', 'desc')
-  );
+export const getInvoicePayments = async (invoiceId: string, userId?: string): Promise<Payment[]> => {
+  // If userId is provided, include it in the query (required by security rules)
+  const q = userId
+    ? query(
+        collection(db, 'payments'),
+        where('userId', '==', userId),
+        where('invoiceId', '==', invoiceId),
+        orderBy('date', 'desc')
+      )
+    : query(
+        collection(db, 'payments'),
+        where('invoiceId', '==', invoiceId),
+        orderBy('date', 'desc')
+      );
+  
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map((doc) => ({
     id: doc.id,
