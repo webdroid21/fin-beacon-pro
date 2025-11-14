@@ -373,57 +373,49 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-12">
-        <div className="container min-w-full px-4">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/logo.svg"
-                  alt="Fin Beacon Pro Logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
-                />
-                <span className="font-bold">Fin Beacon Pro</span>
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Complete finance management solution for modern businesses.
+      <footer className="border-t bg-muted/30 py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-center gap-6 text-center">
+            {/* Logo and Brand */}
+            <div className="flex items-center gap-2">
+              <Image
+                src="/logo.svg"
+                alt="Fin Beacon Pro Logo"
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
+              <span className="text-lg font-bold">Fin Beacon Pro</span>
+            </div>
+
+            {/* Description */}
+            <p className="max-w-md text-sm text-muted-foreground">
+              Complete finance management solution for freelancers and small businesses.
+              Track invoices, manage expenses, and grow your business.
+            </p>
+
+            {/* Quick Links */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                Features
+              </a>
+              <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">
+                How it Works
+              </a>
+              <Link href="/dashboard/support" className="text-muted-foreground hover:text-foreground transition-colors">
+                Support
+              </Link>
+              <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+            </div>
+
+            {/* Copyright */}
+            <div className="border-t pt-6 w-full">
+              <p className="text-sm text-muted-foreground">
+                &copy; {new Date().getFullYear()} Fin Beacon Pro. All rights reserved.
               </p>
             </div>
-
-            <div>
-              <h3 className="font-semibold">Product</h3>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
-                <li><a href="#" className="hover:text-foreground">Integrations</a></li>
-                <li><a href="#" className="hover:text-foreground">Updates</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">Company</h3>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">About</a></li>
-                <li><a href="#" className="hover:text-foreground">Blog</a></li>
-                <li><a href="#" className="hover:text-foreground">Careers</a></li>
-                <li><a href="#" className="hover:text-foreground">Contact</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold">Legal</h3>
-              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Privacy</a></li>
-                <li><a href="#" className="hover:text-foreground">Terms</a></li>
-                <li><a href="#" className="hover:text-foreground">Security</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-12 border-t pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Fin Beacon Pro. All rights reserved.</p>
           </div>
         </div>
       </footer>
