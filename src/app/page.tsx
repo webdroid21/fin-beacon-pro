@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   Settings,
   LogOut,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { auth } from "@/lib/firebase";
@@ -71,8 +72,8 @@ export default function Home() {
             <a href="#how-it-works" className="text-sm font-medium transition-colors hover:text-primary">
               How it Works
             </a>
-            <a href="#pricing" className="text-sm font-medium transition-colors hover:text-primary">
-              Pricing
+            <a href="/dashboard/support" className="text-sm font-medium transition-colors hover:text-primary">
+              Support
             </a>
           </nav>
 
@@ -143,9 +144,9 @@ export default function Home() {
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-24 md:py-32">
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-muted px-4 py-1.5 text-sm">
+            <div className="inline-flex items-center gap-2 rounded-full border bg-primary/10 px-4 py-1.5 text-sm">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>Trusted by 10,000+ businesses worldwide</span>
+              <span className="font-medium">100% Free • No Credit Card Required</span>
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl md:text-7xl">
@@ -159,33 +160,53 @@ export default function Home() {
               track expenses, handle payments, and gain insights—all in one place.
             </p>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/register">
-                <Button size="lg" className="gap-2 text-base">
-                  Start Free Trial
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline" className="gap-2 text-base">
-                <BarChart3 className="h-5 w-5" />
-                View Demo
-              </Button>
-            </div>
+            {user ? (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/dashboard">
+                  <Button size="lg" className="gap-2 text-base">
+                    <LayoutDashboard className="h-5 w-5" />
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Link href="/dashboard/support">
+                  <Button size="lg" variant="outline" className="gap-2 text-base">
+                    <HelpCircle className="h-5 w-5" />
+                    Get Support
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/register">
+                  <Button size="lg" className="gap-2 text-base">
+                    Get Started Free
+                    <ArrowRight className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="gap-2 text-base">
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            )}
 
-            <div className="flex flex-wrap items-center justify-center gap-8 pt-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span>No credit card required</span>
+            {!user && (
+              <div className="flex flex-wrap items-center justify-center gap-8 pt-8 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <span>Completely Free</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <span>No Credit Card</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <span>Unlimited Access</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span>14-day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span>Cancel anytime</span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Dashboard Preview */}
@@ -349,23 +370,42 @@ export default function Home() {
                 Ready to take control of your finances?
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Join thousands of businesses already using Fin Beacon Pro to manage their finances better.
+                Join thousands of businesses using Fin Beacon Pro to manage their finances better.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <Link href="/register">
-                  <Button size="lg" className="gap-2 text-base">
-                    Get Started Free
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="text-base">
-                  Schedule a Demo
-                </Button>
-              </div>
+              {user ? (
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <Link href="/dashboard">
+                    <Button size="lg" className="gap-2 text-base">
+                      <LayoutDashboard className="h-5 w-5" />
+                      Open Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/invoices/new">
+                    <Button size="lg" variant="outline" className="gap-2 text-base">
+                      <FileText className="h-5 w-5" />
+                      Create Invoice
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <Link href="/register">
+                    <Button size="lg" className="gap-2 text-base">
+                      Get Started Free
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <Link href="/login">
+                    <Button size="lg" variant="outline" className="text-base">
+                      Sign In
+                    </Button>
+                  </Link>
+                </div>
+              )}
 
               <p className="mt-6 text-sm text-muted-foreground">
-                No credit card required • 14-day free trial • Cancel anytime
+                100% Free • No Credit Card Required • Unlimited Access
               </p>
             </div>
           </div>
