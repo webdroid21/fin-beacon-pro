@@ -16,6 +16,8 @@ import {
   HelpCircle,
   MessageSquare,
   Wallet,
+  Shield,
+  UserCog,
 } from "lucide-react";
 
 import { NavMain } from "@/components/dashboard/nav-main";
@@ -156,8 +158,26 @@ const navSecondary = [
   },
   {
     title: "Help & Support",
-    url: "#",
+    url: "/dashboard/support",
     icon: HelpCircle,
+  },
+];
+
+const navAdmin = [
+  {
+    title: "Admin Dashboard",
+    url: "/admin/dashboard",
+    icon: Shield,
+  },
+  {
+    title: "Manage Users",
+    url: "/admin/users",
+    icon: UserCog,
+  },
+  {
+    title: "Support Tickets",
+    url: "/admin/support",
+    icon: MessageSquare,
   },
 ];
 
@@ -194,6 +214,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       
       <SidebarContent>
         <NavMain items={navMain} />
+        {userProfile?.role === 'admin' && (
+          <NavSecondary items={navAdmin} className="mt-4" />
+        )}
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       

@@ -21,7 +21,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       {/* Navigation */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container min-w-full flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
               src="/logo.svg"
@@ -63,7 +63,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container px-4 py-24 md:py-32">
+        <section className="container min-w-full px-4 py-24 md:py-32">
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 text-center">
             <div className="inline-flex items-center gap-2 rounded-full border bg-muted px-4 py-1.5 text-sm">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -124,7 +124,7 @@ export default function Home() {
 
         {/* Features Section */}
         <section id="features" className="border-t bg-muted/50 py-24">
-          <div className="container px-4">
+          <div className="container min-w-full px-4">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Everything you need to manage your finances
@@ -171,7 +171,7 @@ export default function Home() {
 
         {/* How it Works */}
         <section id="how-it-works" className="py-24">
-          <div className="container px-4">
+          <div className="container min-w-full px-4">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Get started in minutes
@@ -203,7 +203,7 @@ export default function Home() {
 
         {/* Stats Section */}
         <section className="border-y bg-primary py-16 text-primary-foreground">
-          <div className="container px-4">
+          <div className="container min-w-full px-4">
             <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-4">
               <StatCard value="10K+" label="Active Users" />
               <StatCard value="$50M+" label="Invoices Processed" />
@@ -215,7 +215,7 @@ export default function Home() {
 
         {/* Benefits Section */}
         <section className="py-24">
-          <div className="container px-4">
+          <div className="container min-w-full px-4">
             <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2 lg:gap-16">
               <div className="flex flex-col justify-center">
                 <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -265,7 +265,7 @@ export default function Home() {
 
         {/* CTA Section */}
         <section className="border-t bg-muted/50 py-24">
-          <div className="container px-4">
+          <div className="container min-w-full px-4">
             <div className="mx-auto max-w-3xl text-center">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Ready to take control of your finances?
@@ -296,7 +296,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t py-12">
-        <div className="container px-4">
+        <div className="container min-w-full px-4">
           <div className="grid gap-8 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-2">
