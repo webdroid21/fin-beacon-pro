@@ -117,9 +117,10 @@ export default function DashboardPage() {
   };
 
   // Calculate metrics
-  const totalRevenue = data.invoices
-    .filter(inv => inv.status === 'paid' && filterByDateRange(inv.issueDate))
-    .reduce((sum, inv) => sum + inv.total, 0);
+  // Calculate revenue from actual payments received (not just paid invoices)
+  const totalRevenue = data.payments
+    .filter(payment => payment.status === 'confirmed' && filterByDateRange(payment.date))
+    .reduce((sum, payment) => sum + payment.amount, 0);
 
   const totalExpenses = data.expenses
     .filter(exp => exp.type === 'expense' && filterByDateRange(exp.date))
@@ -128,10 +129,20 @@ export default function DashboardPage() {
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
+  // Debug logging
+  console.log('Dashboard Metrics:', {
+    totalPayments: data.payments.length,
+    confirmedPayments: data.payments.filter(p => p.status === 'confirmed').length,
+    totalRevenue,
+    totalExpenses,
+    netProfit,
+  });
+
   const totalAccounts = data.accounts.length;
   const totalClients = data.clients.length;
   const pendingInvoices = data.invoices.filter(inv => inv.status === 'pending').length;
   const overdueInvoices = data.invoices.filter(inv => inv.status === 'overdue').length;
+  const totalPaymentsCount = data.payments.filter(p => p.status === 'confirmed').length;
 
   // Monthly trend data
   const getMonthlyData = () => {
@@ -142,9 +153,10 @@ export default function DashboardPage() {
       const date = subMonths(new Date(), i);
       const monthStr = format(date, 'yyyy-MM');
 
-      const monthRevenue = data.invoices
-        .filter(inv => inv.issueDate.startsWith(monthStr) && inv.status === 'paid')
-        .reduce((sum, inv) => sum + inv.total, 0);
+      // Calculate revenue from actual payments in this month
+      const monthRevenue = data.payments
+        .filter(payment => payment.date.startsWith(monthStr) && payment.status === 'confirmed')
+        .reduce((sum, payment) => sum + payment.amount, 0);
 
       const monthExpenses = data.expenses
         .filter(exp => exp.date.startsWith(monthStr) && exp.type === 'expense')
@@ -396,7 +408,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.payments.length}</div>
+            <div className="text-2xl font-bold">{totalPaymentsCount}</div>
           </CardContent>
         </Card>
 
